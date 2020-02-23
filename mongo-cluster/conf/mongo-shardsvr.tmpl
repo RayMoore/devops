@@ -1,0 +1,17 @@
+storage:
+  dbPath: /data/db
+  journal: 
+    enabled: true
+systemLog:
+  destination: file
+  logAppend: true
+  path: /var/log/mongodb/mongod.log
+net:
+  port: 2701${NUMBER}
+  bindIp: 0.0.0.0
+processManagement:
+  timeZoneInfo: /usr/share/zoneinfo
+replication:
+  replSetName: shard${NUMBER}
+sharding:
+  clusterRole: shardsvr

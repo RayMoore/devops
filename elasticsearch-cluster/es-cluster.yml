@@ -1,0 +1,45 @@
+---
+- hosts: essvrs
+  become: yes
+  become_user: root
+  become_method: sudo
+  tasks:
+    - name: docker pull elasticsearh
+      shell:
+        cmd: docker pull elasticsearch:7.6.0
+    - name: mkdir /mnt/es-cluster/data directory
+      file: path=/mnt/es-cluster/data state=directory
+    - name: mkdir /mnt/es-cluster/config directory
+      file: path=/mnt/es-cluster/config state=directory
+    - name: mkdir /mnt/es-cluster/plugins directory
+      file: path=/mnt/es-cluster/plugins state=directory
+    - name: mkdir /mnt/es-cluster/logs directory
+      file: path=/mnt/es-cluster/logs state=directory
+    - name: copy template es.yml file to es-cluster/config folder
+      template: src=es.yml.j2 dest=/mnt/es-cluster/config/es.yml
+      tags: copy-yml
+    - name: chmod 777 for /mnt/es-cluster/data
+      shell:
+        cmd: chmod 777 data
+        chdir: /mnt/es-cluster
+      tags: chmod-data
+    - name: vi /etc/sysctl.conf
+      shell:
+        cmd: |
+          cat >> sysctl.conf << EOF
+          vm.max_map_count=262144
+          EOF
+        chdir: /etc
+    - name: sysctl -p
+      shell:
+        cmd: sysctl -p
+    - name: start docker container
+      shell:
+        cmd: >
+          docker run -d --name es --restart always --net=host
+          -e ES_JAVA_OPTS="-Xms512m -Xmx512m"
+          -v /mnt/es-cluster/config/es.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+          -v /mnt/es-cluster/plugins:/usr/share/elasticsearch/plugins
+          -v /mnt/es-cluster/data:/usr/share/elasticsearch/data
+          elasticsearch:7.6.0
+      tags: start-es

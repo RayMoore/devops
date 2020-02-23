@@ -1,0 +1,15 @@
+---
+- hosts: "{{svrs}}"
+  become: yes
+  become_user: root
+  become_method: sudo
+  tasks:
+    - name: update apt list
+      apt: update_cache=yes 
+    - name: install docker on linux
+      apt: name=docker.io
+    - name: start docker and enable docker on system reboot
+      service: name=docker state=started enabled=yes
+    - name: copy daemon.json to /etc/docker/daemon.json
+      copy: src=daemon.json dest=/etc/docker/daemon.json
+      tags: copy-daemon

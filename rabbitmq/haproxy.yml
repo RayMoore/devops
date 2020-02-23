@@ -1,0 +1,13 @@
+---
+- hosts: rabbitmqsvrs
+  become: yes
+  become_user: root
+  become_method: sudo
+  tasks:
+    - name: make directory /mnt/rabbitmq/haproxy
+      file: path=/mnt/rabbitmq/haproxy state=directory
+    - name: copy haproxy.cfg to /mnt/rabbitmq/haproxy
+      copy: src=haproxy.cfg dest=/mnt/rabbitmq/haproxy/haproxy.cfg
+    - name: start haproxy container
+      shell:
+        cmd: docker run -d --name haproxy --restart always --add-host rabbitmq1:172.27.0.12 --add-host rabbitmq2:172.27.0.13 --add-host rabbitmq3:172.27.0.4 -p 8080:80 -p 5677:5677 -p 8081:8081 -v /mnt/rabbitmq/haproxy:/usr/local/etc/haproxy:ro haproxy:latest 

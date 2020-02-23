@@ -1,0 +1,9 @@
+---
+- hosts: "{{svrs}}"
+  become: yes
+  become_user: root
+  become_method: sudo
+  tasks:
+    - name: stop and rm all containers
+      shell:
+        cmd: docker container stop $(docker ps -aq) && docker container rm $(docker ps -aq)

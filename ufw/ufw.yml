@@ -1,0 +1,15 @@
+---
+- hosts: "{{svrs}}"
+  become: yes
+  become_method: sudo
+  become_user: root
+  tasks:
+    - name: disable-ufw
+      ufw: state=disabled
+      tags: disable-ufw
+    - name: enable ufw
+      ufw: state=enabled
+      tags: enable-ufw
+    - name: reload ufw
+      ufw: state=reloaded
+      tags: reload-ufw

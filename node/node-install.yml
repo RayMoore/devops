@@ -1,0 +1,15 @@
+---
+- hosts: all
+  become: yes
+  become_user: root
+  become_method: sudo
+  tasks:
+    - name: update apt list
+      apt: update_cache=yes
+    - name: install nodejs
+      apt: name=nodejs
+      tags: install-nodejs
+    - name: install npm 
+      apt: name=npm
+      tags: install-npm 
+

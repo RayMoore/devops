@@ -1,0 +1,13 @@
+---
+- hosts: rabbitmqsvrs
+  become: yes
+  become_user: root
+  become_method: sudo
+  tasks:
+    - name: pull rabbitmq
+      shell:
+        cmd: docker pull rabbitmq:3.7-rc-management
+    - name: start docker container
+      shell:
+        cmd: docker run -d --name="rabbitmq" -p 4369:4369 -p 5672:5672 -p 15672:15672 -p 25672:25672 --restart always --add-host rabbitmq1:172.27.0.12 --add-host rabbitmq2:172.27.0.13 --add-host rabbitmq3:172.27.0.4 -e RABBITMQ_ERLANG_COOKIE='MOLINZ9183' -h "{{ansible_hostname}}" rabbitmq:3.7-rc-management
+      tags: start-rabbitmq

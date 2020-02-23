@@ -1,0 +1,10 @@
+---
+- hosts: mongosvrs
+  become: yes
+  become_method: sudo
+  become_user: root
+  tasks:
+    - name: delete all mongo images
+      shell:
+        cmd: docker images | grep mongo | tr -s ' ' | cut -d ' ' -f 2 | xargs -I {} sudo docker rmi mongo:{}
+      tags: clear-image

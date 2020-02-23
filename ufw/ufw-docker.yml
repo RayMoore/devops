@@ -1,0 +1,17 @@
+---
+- hosts: "{{ svrs }}"
+  become: yes
+  become_user: root
+  become_method: sudo
+  tasks:
+    - name: /etc/default/ufw
+      copy: src=ufw dest=/etc/default/ufw
+    - name: /det/default/docker
+      copy: src=docker dest=/etc/default/docker
+    - name: /etc/ufw/before.rules
+      copy: src=before.rules dest=/etc/ufw/before.rules
+    - name: reload ufw
+      ufw: state=reloaded
+    - name: restart docker
+      shell:
+        cmd: systemctl restart docker

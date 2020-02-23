@@ -1,0 +1,38 @@
+---
+- hosts: mongosvrs
+  become: yes
+  become_user: root
+  become_method: sudo
+  tasks:
+    - name: copy keyfile to mongo-cluster folder
+      copy: src=keyfile dest=/mnt/mongo-cluster/keyfile
+    - name: copy keyfile to mongodb folders
+      shell:
+        cmd: cp keyfile ./configsvr/ && cp keyfile ./mongos/ && for number in `seq 1 3`; do cp keyfile ./shard${number}; done
+        chdir: /mnt/mongo-cluster
+    - name: chmod 600 keyfile
+      shell:
+        cmd: chmod 600 ./configsvr/keyfile && chmod 600 ./mongos/keyfile && for number in `seq 1 3`; do chmod 600 ./shard${number}/keyfile; done
+        chdir: /mnt/mongo-cluster
+    - name: chown 999:999 keyfile
+      shell:
+        cmd: chown 999:999 ./configsvr/keyfile && chown 999:999 ./mongos/keyfile && for number in `seq 1 3`; do chown 999:999 ./shard${number}/keyfile; done
+        chdir: /mnt/mongo-cluster
+    - name: rm keyfile in source folder
+      shell:
+        cmd: rm keyfile
+        chdir: /mnt/mongo-cluster
+    - name: copy configsvr file to /mnt/mongo-cluster/configsvr folder
+      copy: src=conf-auth/mongo-cfgsvr.conf dest=/mnt/mongo-cluster/configsvr/mongod.conf
+      tags: copy-config
+    - name: copy template file to /mnt/mongo-cluster folder
+      copy: src=conf-auth/mongo-shardsvr.tmpl dest=/mnt/mongo-cluster/mongo-shardsvr.tmpl
+      tags: copy-shard
+    - name: copy template file to /mnt/mongo-cluster folder
+      copy: src=conf-auth/mongo-mongos.conf dest=/mnt/mongo-cluster/mongos/mongos.conf
+      tags: copy-mongos
+    - name: generate shard{1,2,3} config file
+      shell:
+        cmd: for number in `seq 1 3`; do NUMBER=${number} envsubst < ./mongo-shardsvr.tmpl > ./shard${number}/mongod.conf; done
+        chdir: /mnt/mongo-cluster
+      tags: gen-shard

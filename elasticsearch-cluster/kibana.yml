@@ -1,0 +1,16 @@
+---
+- hosts: "{{svrs}}"
+  become: yes
+  become_user: root
+  become_method: sudo
+  tasks:
+    - name: docker pull kibana 7.6.0
+      shell:
+        cmd: docker pull kibana:7.6.0
+    - name: mkdir /mnt/kibana
+      file: path=/mnt/kibana state=directory
+    - name: copy kibana.yml config file to /mnt/kibana
+      template: src=kibana.yml.j2 dest=/mnt/kibana/kibana.yml
+    - name: start kibana container
+      shell:
+        cmd: docker run --name kibana -v /mnt/kibana/kibana.yml:/usr/share/kibana/config/kibana.yml --net=host -d kibana:7.6.0

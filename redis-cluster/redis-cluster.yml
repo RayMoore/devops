@@ -1,0 +1,27 @@
+---
+- hosts: all
+  become: yes
+  become_method: sudo
+  become_user: root
+  tasks:
+    - name: docker pull redis
+      shell:
+        cmd: docker pull redis
+      tags: pull-redis
+    - name: make /mnt/redis-cluster directory
+      file: path=/mnt/redis-cluster state=directory
+    - name: copy template redis conf file to /mnt folder
+      template: src=redis-cluster.tmpl.j2 dest=/mnt/redis-cluster/redis-cluster.tmpl
+    - name: generate conf/ and data/ under /mnt/redis-cluster directory
+      shell:
+        cmd: for port in `seq 9000 9001`; do mkdir -p ./${port}/conf && PORT=${port} envsubst < ./redis-cluster.tmpl > ./${port}/conf/redis.conf && mkdir -p ./${port}/data; done
+        chdir: /mnt/redis-cluster
+    - name: change modify privilege of redis.conf
+      shell:
+        cmd: for port in `seq 9000 9001`; do chmod 777 ./${port}/conf/redis.conf; done
+        chdir: /mnt/redis-cluster
+      tags: chmod-conf
+    - name: create and start docker redis container
+      shell:
+        cmd: for port in `seq 9000 9001`; do docker run -d -ti -p ${port}:${port} -p 1${port}:1${port} -v /mnt/redis-cluster/${port}/conf/redis.conf:/usr/local/etc/redis/redis.conf:rw -v /mnt/redis-cluster/${port}/data:/data:rw --restart always --name redis-${port} --sysctl net.core.somaxconn=1024 redis redis-server /usr/local/etc/redis/redis.conf; done
+      tags: start-container

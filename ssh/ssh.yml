@@ -1,0 +1,12 @@
+---
+- hosts: "{{svrs}}"
+  become: yes
+  become_user: root
+  become_method: sudo
+  tasks:
+    - name: copy sshd_config file to /etc/ssh/
+      copy: src=sshd_config dest=/etc/ssh/sshd_config
+      tags: copy-sshd
+    - name: restart sshd
+      shell:
+        cmd: systemctl restart sshd

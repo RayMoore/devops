@@ -1,0 +1,23 @@
+connect_timeout=30
+network_timeout=30
+base_path=/data/fast_data
+load_fdfs_parameters_from_tracker=true
+storage_sync_file_max_delay = 86400
+use_storage_id = false
+storage_ids_filename = storage_ids.conf
+{% for host in groups['dfssvrs'] %}
+tracker_server={{ hostvars[host]['private_ip'] }}:22122
+{% endfor %}
+storage_server_port=23002
+group_name={{ group_name }}
+url_have_group_name = true
+store_path_count=1
+store_path0=/data/fast_data
+log_level=info
+log_filename=
+response_mode=proxy
+if_alias_prefix=
+flv_support = true
+flv_extension = flv
+group_count = 0
+#include http.conf

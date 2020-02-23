@@ -1,0 +1,14 @@
+---
+- hosts: all
+  become: yes
+  become_method: sudo
+  become_user: root
+  tasks:
+    - name: stop and remove all containers
+      shell:
+        cmd: (docker stop $(docker ps -aq) || true) && (docker rm $(docker ps -aq) || true)
+      tags: clear-container
+    - name: delete all redis images
+      shell:
+        cmd: docker images | grep redis | tr -s ' ' | cut -d ' ' -f 2 | xargs -I {} sudo docker rmi redis:{}
+      tags: clear-image

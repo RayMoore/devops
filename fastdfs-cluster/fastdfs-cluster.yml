@@ -1,0 +1,51 @@
+---
+- hosts: dfssvrs
+  become: yes
+  become_user: root
+  become_method: sudo
+  tasks:
+    - name: docker pull fastdfs
+      shell:
+        cmd: docker pull morunchang/fastdfs
+    - name: mkdir /mnt/fastdfs-cluster/tracker/data
+      file: path=/mnt/fastdfs-cluster/tracker/data state=directory
+    - name: mkdir /mnt/fastdfs-cluster/tracker/conf
+      file: path=/mnt/fastdfs-cluster/tracker/conf state=directory
+    - name: mkdir /mnt/fastdfs-cluster/storage/data
+      file: path=/mnt/fastdfs-cluster/storage/data state=directory
+    - name: mkdir /mnt/fastdfs-cluster/storage/conf
+      file: path=/mnt/fastdfs-cluster/storage/conf state=directory
+    - name: copy template track conf file to /mnt/fastdfs-cluster/tracker/conf folder
+      template: src=tracker.conf.j2 dest=/mnt/fastdfs-cluster/tracker/conf/tracker.conf
+    - name: copy template storage conf file to /mnt/fastdfs-cluster/storage/conf folder
+      template: src=storage.conf.j2 dest=/mnt/fastdfs-cluster/storage/conf/storage.conf
+    - name: copy template nginx conf file to /mnt/fastdfs-cluster/storage/conf folder
+      template: src=nginx.conf.j2 dest=/mnt/fastdfs-cluster/storage/conf/nginx.conf
+    - name: copy template mod_fastdfs conf file to /mnt/fastdfs-cluster/storage/conf folder
+      template: src=mod_fastdfs.conf.j2 dest=/mnt/fastdfs-cluster/storage/conf/mod_fastdfs.conf
+    - name: copy template client conf file to /mnt/fastdfs-cluster/storage/conf folder
+      template: src=client.conf.j2 dest=/mnt/fastdfs-cluster/storage/conf/client.conf
+    - name: copy template storage.sh conf file to /mnt/fastdfs-cluster/storage/conf folder
+      copy: src=storage.sh dest=/mnt/fastdfs-cluster/storage/conf/storage.sh
+    - name: start tracker
+      shell:
+        cmd: >
+          docker run -d --name tracker --net=host --restart always 
+          -v /etc/localtime:/etc/localtime 
+          -v /mnt/fastdfs-cluster/tracker/data:/data/fast_data/ 
+          -v /mnt/fastdfs-cluster/tracker/conf/tracker.conf:/etc/fdfs/tracker.conf 
+          morunchang/fastdfs sh tracker.sh
+      tags: start-tracker
+    - name: start storage
+      shell:
+        cmd: >
+          docker run -d --name storage --net=host --restart always
+          -v /etc/localtime:/etc/localtime 
+          -v /mnt/fastdfs-cluster/storage/data:/data/fast_data/ 
+          -v /mnt/fastdfs-cluster/storage/conf/storage.sh:/storage.sh 
+          -v /mnt/fastdfs-cluster/storage/conf/storage.conf:/etc/fdfs/storage.conf 
+          -v /mnt/fastdfs-cluster/storage/conf/nginx.conf:/etc/nginx/conf/nginx.conf  
+          -v /mnt/fastdfs-cluster/storage/conf/mod_fastdfs.conf:/etc/fdfs/mod_fastdfs.conf 
+          -v /mnt/fastdfs-cluster/storage/conf/client.conf:/data/fastdfs/conf/client.conf
+          morunchang/fastdfs sh storage.sh
+      tags: start-storage

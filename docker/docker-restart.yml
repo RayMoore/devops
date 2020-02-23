@@ -1,0 +1,10 @@
+---
+- hosts: "{{svrs}}"
+  become: yes
+  become_user: root
+  become_method: sudo
+  tasks:
+    - name: restart all docker containers
+      shell:
+        cmd: docker container restart $(docker ps -aq)
+      tags: restart-container
